@@ -97,4 +97,17 @@ conf.registerChannelValue(Gitlab.format, 'merge-request-merge',
     registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 merged by {user[name]} {merge_request[url]}"""),
                     _("""Format for merge-request/open events.""")))
 
+conf.registerChannelValue(Gitlab.format, 'note-merge-request',
+    registry.String(_("""\x02[{project[name]}]\x02 {user[name]} commented on Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 {note[url]}"""),
+                    _("""Format for note/merge-request events.""")))
+conf.registerChannelValue(Gitlab.format, 'note-commit',
+    registry.String(_("""\x02[{project[name]}]\x02 {user[name]} commented on Commit \x02#{commit[id]}\x02 {commit[url]}"""),
+                    _("""Format for note/commit events.""")))
+conf.registerChannelValue(Gitlab.format, 'note-issue',
+    registry.String(_("""\x02[{project[name]}]\x02 {user[name]} commented on Issue \x02#{issue[id]} {issue[title]}\x02 {note[url]}"""),
+                    _("""Format for note/issue events.""")))
+conf.registerChannelValue(Gitlab.format, 'note-snippet',
+    registry.String(_("""\x02[{project[name]}]\x02 {user[name]} commented on Snippet \x02#{snippet[id]} {snippet[title]}\x02 {note[url]}"""),
+                    _("""Format for note/snippet events.""")))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

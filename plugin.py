@@ -145,7 +145,19 @@ class GitlabHandler(object):
             self._send_message(channel, msg)
 
     def _note_hook(self, channel, payload):
-        pass
+        noteable_type = payload['object_attributes']['noteable_type']
+        if noteable_type not in ['Commit', 'MergeRequest', 'Issue', 'Snippet']:
+            self.log.info("Unsupported note type '%s'" % noteable_type)
+            return
+
+        noteable_type = noteable_type.lower()
+        if noteable_type == "mergerequest":
+            noteable_type = "merge-request"
+
+        payload['note'] = payload['object_attributes']
+
+        msg = self._build_message(channel, 'note-' + noteable_type, payload)
+        self._send_message(channel, msg)
 
     def _issue_hook(self, channel, payload):
         action = payload['object_attributes']['action']
