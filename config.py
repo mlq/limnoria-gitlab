@@ -57,4 +57,25 @@ conf.registerChannelValue(Gitlab, 'projects',
 # Format
 conf.registerGroup(Gitlab, 'format')
 
+conf.registerChannelValue(Gitlab.format, 'push',
+    registry.String(_("""\x02[{project[name]}]\x02 {user_name} pushed \x02{total_commits_count} commit(s)\x02 to \x02{ref}\x02:"""),
+                    _("""Format for push events.""")))
+conf.registerChannelValue(Gitlab.format, 'commit',
+    registry.String(_("""\x02[{project[name]}]\x02 {short_id} \x02{message}\x02 by {author[name]}"""),
+                    _("""Format for commits.""")))
+
+conf.registerChannelValue(Gitlab.format, 'tag-push',
+    registry.String(_("""\x02[{project[name]}]\x02 {user_name} created a new tag {ref}"""),
+                    _("""Format for tag push events.""")))
+
+conf.registerChannelValue(Gitlab.format, 'issue-created',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 created by {user[name]} {url}"""),
+                    _("""Format for issue/create events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-deleted',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 deleted by {user[name]} {url}"""),
+                    _("""Format for issue/delete events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-changed',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 changed by {user[name]} {url}"""),
+                    _("""Format for issue/change events.""")))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

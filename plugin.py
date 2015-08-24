@@ -28,10 +28,7 @@
 
 ###
 
-import pprint
 import json
-import hmac
-import hashlib
 
 from supybot.commands import *
 import supybot.ircdb as ircdb
@@ -63,37 +60,79 @@ class GitlabHandler(object):
 
     def handle_payload(self, headers, payload):
         if 'X-Gitlab-Event' not in headers:
-            return
-
-        if 'repository' not in payload:
+            self.log.info('Invalid header: Missing X-Gitlab-Event entry')
             return
 
         event_type = headers['X-Gitlab-Event']
+        if event_type not in ['Push Hook', 'Tag Push Hook', 'Note Hook', 'Issue Hook', 'Merge Request Hook']:
+            self.log.info('Unsupported X-Gitlab-Event type')
+            return
 
-        if event_type == 'Push Hook':
-            pass
-        elif event_type == 'Tag Push Hook':
-            pass
-        elif event_type == 'Issue Hook':
-            pass
-        elif event_type == 'Note Hook':
-            pass
-        elif event_type == 'Merge Request Hook':
-            pass
-
-        format_string_identifier = None
-
-        # Check if any of the joined channels have subscribed to this project
+        # Check if any channel has subscribed to this project
         for channel in self.irc.state.channels.keys():
             projects = self.plugin._load_projects(channel)
-            project_url = str(project_url)
-            if project_url in projects.values():
-                # Send message to channel
-                self._send_message(channel, format_string_identifier, data)
+            for slug, url in projects.items():
+                # Parse project url
+                if event_type == 'Push Hook' or event_type == 'Tag Push Hook' or event_type == 'Note Hook':
+                    if url != payload['repository']['homepage']:
+                        continue
+                elif event_type == 'Issue Hook' or event_type == 'Merge Request Hook':
+                    if url not in payload['object_attributes']['url']:
+                        continue
+                else:
+                    continue
 
-    def _send_message(self, channel, format_string_identifier, args):
-        format_string = str(self.plugin.registryValue(format_string_identifier, channel))
+                # Handle types
+                if event_type == 'Push Hook':
+                    self._push_hook(channel, slug, payload)
+                elif event_type == 'Tag Push Hook':
+                    self._tag_push_hook(channel, slug, payload)
+                elif event_type == 'Issue Hook':
+                    self._issue_hook(channel, slug, payload)
+                elif event_type == 'Note Hook':
+                    self._note_hook(channel, slug, payload)
+                elif event_type == 'Merge Request Hook':
+                    self._merge_request_hook(channel, slug, payload)
+
+    def _push_hook(self, channel, slug, payload):
+        payload['project'] = {
+            'id': payload['project_id'],
+            'name': slug
+        }
+
+        # Send general message
+        msg = self._build_message(channel, 'push', payload)
+        self._send_message(channel, msg)
+
+        # Send commits
+        for commit in payload['commits']:
+            commit['project'] = {
+                'id': payload['project_id'],
+                'name': slug
+            }
+            commit['short_id'] = commit['id'][0:10]
+
+            msg = self._build_message(channel, 'commit', commit)
+            self._send_message(channel, msg)
+
+    def _tag_push_hook(self, channel, slug, payload):
+        pass
+
+    def _note_hook(self, channel, slug, payload):
+        pass
+
+    def _issue_hook(self, channel, slug, payload):
+        pass
+
+    def _merge_request_hook(self, channel, slug, payload):
+        pass
+
+    def _build_message(self, channel, format_string_identifier, args):
+        format_string = str(self.plugin.registryValue('format.' + format_string_identifier, channel))
         msg = format_string.format(**args)
+        return msg
+
+    def _send_message(self, channel, msg):
         priv_msg = ircmsgs.privmsg(channel, msg)
         self.irc.queueMsg(priv_msg)
 
@@ -124,7 +163,6 @@ class GitlabWebHookService(httpserver.SupyHTTPServerCallback):
 
     def doPost(self, handler, path, form):
         headers = dict(self.headers)
-        pprint.pprint(headers)
 
         network = None
         channel = None
@@ -151,6 +189,7 @@ class GitlabWebHookService(httpserver.SupyHTTPServerCallback):
         try:
             self.gitlab.handle_payload(headers, payload)
         except Exception as e:
+            self.log.info(e)
             self._send_error(handler, _('Error: Invalid data sent.'))
 
         # Return OK
@@ -202,7 +241,7 @@ class Gitlab(callbacks.Plugin):
 
             @internationalizeDocstring
             def add(self, irc, msg, args, channel, project_slug, project_url):
-                """[<channel>] <project-url>
+                """[<channel>] <project-slug> <project-url>
 
                 Announces the changes of the project with the slug <project-slug>
                 and the url <project-url> to <channel>.
@@ -211,7 +250,7 @@ class Gitlab(callbacks.Plugin):
                     return
 
                 projects = instance._load_projects(channel)
-                if project_id in projects:
+                if project_slug in projects:
                     irc.error(_('This project is already announced to this channel.'))
                     return
 
