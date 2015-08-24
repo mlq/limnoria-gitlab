@@ -68,14 +68,17 @@ conf.registerChannelValue(Gitlab.format, 'tag-push',
     registry.String(_("""\x02[{project[name]}]\x02 {user_name} created a new tag {ref}"""),
                     _("""Format for tag push events.""")))
 
-conf.registerChannelValue(Gitlab.format, 'issue-created',
-    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 created by {user[name]} {url}"""),
-                    _("""Format for issue/create events.""")))
-conf.registerChannelValue(Gitlab.format, 'issue-deleted',
-    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 deleted by {user[name]} {url}"""),
-                    _("""Format for issue/delete events.""")))
-conf.registerChannelValue(Gitlab.format, 'issue-changed',
-    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[subject]}\x02 changed by {user[name]} {url}"""),
-                    _("""Format for issue/change events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-open',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[title]}\x02 created by {user[name]} {issue[url]}"""),
+                    _("""Format for issue/open events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-update',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[title]}\x02 updated by {user[name]} {issue[url]}"""),
+                    _("""Format for issue/update events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-close',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[title]}\x02 closed by {user[name]} {issue[url]}"""),
+                    _("""Format for issue/close events.""")))
+conf.registerChannelValue(Gitlab.format, 'issue-reopen',
+    registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[title]}\x02 reopend by {user[name]} {issue[url]}"""),
+                    _("""Format for issue/reopen events.""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

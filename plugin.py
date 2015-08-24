@@ -29,6 +29,7 @@
 ###
 
 import json
+import pprint
 
 from supybot.commands import *
 import supybot.ircdb as ircdb
@@ -82,24 +83,25 @@ class GitlabHandler(object):
                 else:
                     continue
 
+                # Update payload
+                payload['project'] = {
+                    'id': payload['project_id'] if event_type != 'Issue Hook' else payload['object_attributes']['project_id'],
+                    'name': slug
+                }
+
                 # Handle types
                 if event_type == 'Push Hook':
-                    self._push_hook(channel, slug, payload)
+                    self._push_hook(channel, payload)
                 elif event_type == 'Tag Push Hook':
-                    self._tag_push_hook(channel, slug, payload)
+                    self._tag_push_hook(channel, payload)
                 elif event_type == 'Issue Hook':
-                    self._issue_hook(channel, slug, payload)
+                    self._issue_hook(channel, payload)
                 elif event_type == 'Note Hook':
-                    self._note_hook(channel, slug, payload)
+                    self._note_hook(channel, payload)
                 elif event_type == 'Merge Request Hook':
-                    self._merge_request_hook(channel, slug, payload)
+                    self._merge_request_hook(channel, payload)
 
-    def _push_hook(self, channel, slug, payload):
-        payload['project'] = {
-            'id': payload['project_id'],
-            'name': slug
-        }
-
+    def _push_hook(self, channel, payload):
         # Send general message
         msg = self._build_message(channel, 'push', payload)
         self._send_message(channel, msg)
@@ -108,23 +110,32 @@ class GitlabHandler(object):
         for commit in payload['commits']:
             commit['project'] = {
                 'id': payload['project_id'],
-                'name': slug
+                'name': payload['project']['name']
             }
             commit['short_id'] = commit['id'][0:10]
 
             msg = self._build_message(channel, 'commit', commit)
             self._send_message(channel, msg)
 
-    def _tag_push_hook(self, channel, slug, payload):
+    def _tag_push_hook(self, channel, payload):
+        msg = self._build_message(channel, 'tag-push', payload)
+        self._send_message(channel, msg)
+
+    def _note_hook(self, channel, payload):
         pass
 
-    def _note_hook(self, channel, slug, payload):
-        pass
+    def _issue_hook(self, channel, payload):
+        action = payload['object_attributes']['action']
+        if action not in ['open', 'update', 'close', 'reopen']:
+            self.log.info("Unsupported issue action '%s'" % action)
+            return
 
-    def _issue_hook(self, channel, slug, payload):
-        pass
+        payload['issue'] = payload['object_attributes']
 
-    def _merge_request_hook(self, channel, slug, payload):
+        msg = self._build_message(channel, 'issue-' + action, payload)
+        self._send_message(channel, msg)
+
+    def _merge_request_hook(self, channel, payload):
         pass
 
     def _build_message(self, channel, format_string_identifier, args):
@@ -181,16 +192,21 @@ class GitlabWebHookService(httpserver.SupyHTTPServerCallback):
             return
 
         # Handle payload
+        payload = None
         try:
             payload = json.JSONDecoder().decode(form.decode('utf-8'))
         except Exception as e:
+            print(e)
             self._send_error(handler, _('Error: Invalid JSON data sent.'))
+            return
 
         try:
             self.gitlab.handle_payload(headers, payload)
         except Exception as e:
+            print(e)
             self.log.info(e)
             self._send_error(handler, _('Error: Invalid data sent.'))
+            return
 
         # Return OK
         self._send_ok(handler)
