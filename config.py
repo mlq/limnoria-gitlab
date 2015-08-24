@@ -61,7 +61,7 @@ conf.registerChannelValue(Gitlab.format, 'push',
     registry.String(_("""\x02[{project[name]}]\x02 {user_name} pushed \x02{total_commits_count} commit(s)\x02 to \x02{ref}\x02:"""),
                     _("""Format for push events.""")))
 conf.registerChannelValue(Gitlab.format, 'commit',
-    registry.String(_("""\x02[{project[name]}]\x02 {short_id} \x02{message}\x02 by {author[name]}"""),
+    registry.String(_("""\x02[{project[name]}]\x02 {short_id} \x02{short_message}\x02 by {author[name]}"""),
                     _("""Format for commits.""")))
 
 conf.registerChannelValue(Gitlab.format, 'tag',

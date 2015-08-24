@@ -123,6 +123,7 @@ class GitlabHandler(object):
                 'name': payload['project']['name'],
                 'url': payload['project']['url']
             }
+            commit['short_message'] = commit['message'].splitlines()[0]
             commit['short_id'] = commit['id'][0:10]
 
             msg = self._build_message(channel, 'commit', commit)
@@ -139,6 +140,7 @@ class GitlabHandler(object):
                 'name': payload['project']['name'],
                 'url': payload['project']['url']
             }
+            commit['short_message'] = commit['message'].splitlines()[0]
             commit['short_id'] = commit['id'][0:10]
 
             msg = self._build_message(channel, 'commit', commit)
