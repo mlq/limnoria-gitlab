@@ -77,17 +77,27 @@ class GitlabHandler(object):
                 if event_type == 'Push Hook' or event_type == 'Tag Push Hook' or event_type == 'Note Hook':
                     if url != payload['repository']['homepage']:
                         continue
-                elif event_type == 'Issue Hook' or event_type == 'Merge Request Hook':
+                elif event_type == 'Issue Hook':
                     if url not in payload['object_attributes']['url']:
+                        continue
+                elif event_type == 'Merge Request Hook':
+                    if url not in payload['object_attributes']['target']['http_url']:
                         continue
                 else:
                     continue
 
                 # Update payload
                 payload['project'] = {
-                    'id': payload['project_id'] if event_type != 'Issue Hook' else payload['object_attributes']['project_id'],
-                    'name': slug
+                    'name': slug,
+                    'url': url
                 }
+
+                if event_type == 'Issue Hook':
+                    payload['project']['id'] = payload['object_attributes']['project_id']
+                elif event_type == 'Merge Request Hook':
+                    payload['project']['id'] = payload['object_attributes']['target_project_id']
+                else:
+                    payload['project']['id'] = payload['project_id']
 
                 # Handle types
                 if event_type == 'Push Hook':
@@ -110,7 +120,8 @@ class GitlabHandler(object):
         for commit in payload['commits']:
             commit['project'] = {
                 'id': payload['project_id'],
-                'name': payload['project']['name']
+                'name': payload['project']['name'],
+                'url': payload['project']['url']
             }
             commit['short_id'] = commit['id'][0:10]
 
@@ -118,8 +129,20 @@ class GitlabHandler(object):
             self._send_message(channel, msg)
 
     def _tag_push_hook(self, channel, payload):
-        msg = self._build_message(channel, 'tag-push', payload)
+        msg = self._build_message(channel, 'tag', payload)
         self._send_message(channel, msg)
+
+        # Send commits
+        for commit in payload['commits']:
+            commit['project'] = {
+                'id': payload['project_id'],
+                'name': payload['project']['name'],
+                'url': payload['project']['url']
+            }
+            commit['short_id'] = commit['id'][0:10]
+
+            msg = self._build_message(channel, 'commit', commit)
+            self._send_message(channel, msg)
 
     def _note_hook(self, channel, payload):
         pass
@@ -136,7 +159,15 @@ class GitlabHandler(object):
         self._send_message(channel, msg)
 
     def _merge_request_hook(self, channel, payload):
-        pass
+        action = payload['object_attributes']['action']
+        if action not in ['open', 'update', 'close', 'reopen', 'merge']:
+            self.log.info("Unsupported issue action '%s'" % action)
+            return
+
+        payload['merge_request'] = payload['object_attributes']
+
+        msg = self._build_message(channel, 'merge-request-' + action, payload)
+        self._send_message(channel, msg)
 
     def _build_message(self, channel, format_string_identifier, args):
         format_string = str(self.plugin.registryValue('format.' + format_string_identifier, channel))
@@ -196,14 +227,13 @@ class GitlabWebHookService(httpserver.SupyHTTPServerCallback):
         try:
             payload = json.JSONDecoder().decode(form.decode('utf-8'))
         except Exception as e:
-            print(e)
+            self.log.info(e)
             self._send_error(handler, _('Error: Invalid JSON data sent.'))
             return
 
         try:
             self.gitlab.handle_payload(headers, payload)
         except Exception as e:
-            print(e)
             self.log.info(e)
             self._send_error(handler, _('Error: Invalid data sent.'))
             return

@@ -64,7 +64,7 @@ conf.registerChannelValue(Gitlab.format, 'commit',
     registry.String(_("""\x02[{project[name]}]\x02 {short_id} \x02{message}\x02 by {author[name]}"""),
                     _("""Format for commits.""")))
 
-conf.registerChannelValue(Gitlab.format, 'tag-push',
+conf.registerChannelValue(Gitlab.format, 'tag',
     registry.String(_("""\x02[{project[name]}]\x02 {user_name} created a new tag {ref}"""),
                     _("""Format for tag push events.""")))
 
@@ -80,5 +80,21 @@ conf.registerChannelValue(Gitlab.format, 'issue-close',
 conf.registerChannelValue(Gitlab.format, 'issue-reopen',
     registry.String(_("""\x02[{project[name]}]\x02 Issue \x02#{issue[id]} {issue[title]}\x02 reopend by {user[name]} {issue[url]}"""),
                     _("""Format for issue/reopen events.""")))
+
+conf.registerChannelValue(Gitlab.format, 'merge-request-open',
+    registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 created by {user[name]} {merge_request[url]}"""),
+                    _("""Format for merge-request/open events.""")))
+conf.registerChannelValue(Gitlab.format, 'merge-request-update',
+    registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 updated by {user[name]} {merge_request[url]}"""),
+                    _("""Format for merge-request/open events.""")))
+conf.registerChannelValue(Gitlab.format, 'merge-request-close',
+    registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 closed by {user[name]} {merge_request[url]}"""),
+                    _("""Format for merge-request/open events.""")))
+conf.registerChannelValue(Gitlab.format, 'merge-request-reopen',
+    registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 reopened by {user[name]} {merge_request[url]}"""),
+                    _("""Format for merge-request/open events.""")))
+conf.registerChannelValue(Gitlab.format, 'merge-request-merge',
+    registry.String(_("""\x02[{project[name]}]\x02 Merge request \x02#{merge_request[id]} {merge_request[title]}\x02 merged by {user[name]} {merge_request[url]}"""),
+                    _("""Format for merge-request/open events.""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
