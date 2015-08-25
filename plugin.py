@@ -29,9 +29,8 @@
 ###
 
 import json
-import pprint
 
-from supybot.commands import *
+from supybot.commands import wrap
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
@@ -52,6 +51,7 @@ except ImportError:
 
 
 class GitlabHandler(object):
+
     """Handle gitlab messages"""
 
     def __init__(self, plugin, irc):
@@ -93,9 +93,11 @@ class GitlabHandler(object):
                 }
 
                 if event_type == 'Issue Hook':
-                    payload['project']['id'] = payload['object_attributes']['project_id']
+                    payload['project']['id'] = payload[
+                        'object_attributes']['project_id']
                 elif event_type == 'Merge Request Hook':
-                    payload['project']['id'] = payload['object_attributes']['target_project_id']
+                    payload['project']['id'] = payload[
+                        'object_attributes']['target_project_id']
                 else:
                     payload['project']['id'] = payload['project_id']
 
@@ -184,7 +186,11 @@ class GitlabHandler(object):
         self._send_message(channel, msg)
 
     def _build_message(self, channel, format_string_identifier, args):
-        format_string = str(self.plugin.registryValue('format.' + format_string_identifier, channel))
+        format_string = str(
+            self.plugin.registryValue(
+                'format.' +
+                format_string_identifier,
+                channel))
         msg = format_string.format(**args)
         return msg
 
@@ -257,7 +263,8 @@ class GitlabWebHookService(httpserver.SupyHTTPServerCallback):
 
 
 class Gitlab(callbacks.Plugin):
-    """Plugin for communication and notifications of a Gitlab project management tool instance"""
+    """Plugin for communication and notifications of a Gitlab project
+    management tool instance"""
     threaded = True
 
     def __init__(self, irc):
@@ -303,15 +310,16 @@ class Gitlab(callbacks.Plugin):
             def add(self, irc, msg, args, channel, project_slug, project_url):
                 """[<channel>] <project-slug> <project-url>
 
-                Announces the changes of the project with the slug <project-slug>
-                and the url <project-url> to <channel>.
+                Announces the changes of the project with the slug
+                <project-slug> and the url <project-url> to <channel>.
                 """
                 if not instance._check_capability(irc, msg):
                     return
 
                 projects = instance._load_projects(channel)
                 if project_slug in projects:
-                    irc.error(_('This project is already announced to this channel.'))
+                    irc.error(
+                        _('This project is already announced to this channel.'))
                     return
 
                 # Save new project mapping
@@ -324,17 +332,18 @@ class Gitlab(callbacks.Plugin):
 
             @internationalizeDocstring
             def remove(self, irc, msg, args, channel, project_slug):
-                """[<channel>] <project-id>
+                """[<channel>] <project-slug>
 
-                Stops announcing the changes of the project slug <project-slug> to
-                <channel>.
+                Stops announcing the changes of the project slug <project-slug>
+                to <channel>.
                 """
                 if not instance._check_capability(irc, msg):
                     return
 
                 projects = instance._load_projects(channel)
                 if project_slug not in projects:
-                    irc.error(_('This project is not registered to this channel.'))
+                    irc.error(
+                        _('This project is not registered to this channel.'))
                     return
 
                 # Remove project mapping
