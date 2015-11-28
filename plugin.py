@@ -281,17 +281,14 @@ class Gitlab(callbacks.Plugin):
         super(Gitlab, self).die()
 
     def _load_projects(self, channel):
-        projects_string = self.registryValue('projects', channel)
-        if projects_string is None or len(projects_string) == 0:
+        projects = self.registryValue('projects', channel)
+        if projects is None:
             return {}
         else:
-            return json.loads(projects_string)
+            return projects
 
     def _save_projects(self, projects, channel):
-        string = ''
-        if projects is not None:
-            string = json.dumps(projects)
-        self.setRegistryValue('projects', value=string, channel=channel)
+        self.setRegistryValue('projects', value=projects, channel=channel)
 
     def _check_capability(self, irc, msg):
         if ircdb.checkCapability(msg.prefix, 'admin'):

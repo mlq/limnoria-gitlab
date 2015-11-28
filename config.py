@@ -52,7 +52,7 @@ Gitlab = conf.registerPlugin('Gitlab')
 
 # Settings
 conf.registerChannelValue(Gitlab, 'projects',
-    registry.String("", _("""List of projects""")))
+    registry.Json({}, _("""List of projects""")))
 
 # Format
 conf.registerGroup(Gitlab, 'format')
