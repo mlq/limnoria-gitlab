@@ -29,19 +29,18 @@ Depending on the configuration of your Limnoria instance and your web server the
 plugin now listens on the following address where it accepts the network and the
 channel as a parameter:
 
-`http://<host>:<port>/gitlab/<network>/<channel>`
+`http://<host>:<port>/gitlab/<network>`
 
 The placeholders are defined as followed:
 
   - `<host>` - The host defined by the external IP of the service
   - `<port>` - The port that the HTTP server of Limnoria listens to
   - `<network>` - The network that the Limnoria instance is connected to
-  - `<channel>` - The channel that the Limnoria instance is in
 
 For instance if your bot is in the _OFTC_ network and in the _#limnoria-gitlab_
 channel, the plugin listens on the following URL for webhook notifications:
 
-`http://limnoria.example.com:8080/gitlab/OFTC/limnoria-gitlab`
+`http://limnoria.example.com:8080/gitlab/OFTC`
 
 Now you need to add this address as a new webhook in the project settings of
 your Gitlab instance. Therefore you go to `Settings -> Webhooks`
